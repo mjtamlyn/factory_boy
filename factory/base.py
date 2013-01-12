@@ -641,6 +641,22 @@ class Factory(BaseFactory):
         return cls._generate(True, attrs)
 
 
+class DjangoModelFactoryMetaClass(FactoryMetaClass):
+    """Metaclass for Django model factories.
+
+    Permits the use of 'app.Model' format for FACTORY_CLASS_DECLARATION.
+    """
+    @classmethod
+    def _discover_associated_class(cls, class_name, attrs, inherited=None):
+        associated_class = super(DjangoModelFactoryMetaClass,
+                cls)._discover_associated_class(
+                        cls, class_name, attrs, inherited=None)
+        if isinstance(associated_class, basestring):
+            from django.db.models.loading import get_model
+            return get_model(associated_class)
+        return associated_class
+
+
 class DjangoModelFactory(Factory):
     """Factory for Django models.
 
@@ -649,6 +665,8 @@ class DjangoModelFactory(Factory):
     Possible improvement: define a new 'attribute' type, AutoField, which would
     handle those for non-numerical primary keys.
     """
+
+    __metaclass__ = DjangoModelFactoryMetaClass
 
     FACTORY_ABSTRACT = True
 
